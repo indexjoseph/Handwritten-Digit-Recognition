@@ -1,3 +1,4 @@
+import tensorflow as tf
 from keras.models import load_model
 from tkinter import *
 import tkinter as tk
@@ -52,7 +53,7 @@ class App(tk.Tk):
     def draw_lines(self, event):
         self.x = event.x
         self.y = event.y
-        r = 4
+        r = 8
         self.canvas.create_oval(self.x - r, self.y - r, self.x + r, self.y + r, fill='black')
 
 
