@@ -1,46 +1,49 @@
-import keras
-from keras.datasets import mnist
-from keras.models import Sequential
-from keras.layers import Dense, Flatten
-from keras.layers import Dropout
-from keras.layers import Flatten
-from keras.layers import Conv2D
-from keras.layers import MaxPooling2D
-from keras import backend as K
-#  to split the data of training and testing sets
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
+x_train = tf.keras.utils.normalize(x_train, axis=1)
+x_test = tf.keras.utils.normalize(x_test, axis=1)
 
-batch_size = 128
-num_classes = 10
-epochs = 20
-x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
-x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
-input_shape = (28, 28, 1)
-# conversion of class vectors to matrices of  binary class
-y_train = keras.utils.to_categorical(y_train, num_classes)
-y_test = keras.utils.to_categorical(y_test, num_classes)
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
 
-model = Sequential()
-model.add(Conv2D(32, kernel_size=(3, 3),activation='relu',input_shape=input_shape))
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-model.add(Flatten())
-model.add(Dense(256, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(num_classes, activation='softmax'))
-model.compile(loss=keras.losses.categorical_crossentropy,optimizer=keras.optimizers.Adadelta(),metrics=['accuracy'])
+def draw(n):
+    plt.imshow(n, cmap=plt.cm.binary)
+    plt.show()
 
-hist = model.fit(x_train, y_train,batch_size=batch_size,epochs=epochs,verbose=1,validation_data=(x_test, y_test))
-print("The model has successfully trained")
+
+draw(x_train[0])
+
+# there are two types of models
+# sequential is most common, why?
+
+model = tf.keras.models.Sequential()
+
+model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
+# reshape
+
+model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
+model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
+model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy']
+              )
+model.fit(x_train, y_train, epochs=3)
+
+val_loss,val_acc = model.evaluate(x_test,y_test)
+print("loss-> ",val_loss,"\nacc-> ",val_acc)
+
+predictions = model.predict([x_test])
+print('label -> ', y_test[2])
+print('prediction -> ', np.argmax(predictions[2]))
+
+draw(x_test[2])
+
+# saving the model
+# .h5 or .model can be used
+
 model.save('mnist.h5')
-print("Saving the bot as mnist.h5")
-
-score = model.evaluate(x_test, y_test, verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
