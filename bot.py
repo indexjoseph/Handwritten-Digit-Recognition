@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 
-"""mnist = tf.keras.datasets.mnist
+mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 #Pre processing of the data
@@ -37,20 +37,4 @@ model.save("mnist.model")
 loss, acc = model.evaluate(x_test, y_test)
 
 print(loss)
-print(acc)"""
-
-model = tf.keras.models.load_model("mnist.model")
-
-image_number = 1
-while os.path.isfile(f"test_digits/{image_number}.png"):
-    try:
-        image = cv2.imread(f"test_digits/{image_number}.png")
-        image = cv2.resize(image, (28, 28))
-        image = np.pad(image, (10, 10), 'constant', constant_values=0)
-        image = cv2.resize(image, (28, 28))/255
-        prediction = model.predict(image.reshape(1, 28, 28, 1))
-        print(f"this digit is probably a {np.argmax(prediction)}") # np.argmax gives the highest probability number
-        plt.imshow(image[0], cmap=plt.cm.binary)
-        plt.show()
-    finally:
-        image_number += 1
+print(acc)
