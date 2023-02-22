@@ -1,49 +1,56 @@
+import os
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
 
-mnist = tf.keras.datasets.mnist
+
+"""mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-x_train = tf.keras.utils.normalize(x_train, axis=1)
-x_test = tf.keras.utils.normalize(x_test, axis=1)
+#Pre processing of the data
+x_train = x_train.astype(np.float32)/255
+x_test = x_test.astype(np.float32)/255
 
+#Reshape the data
+x_train = np.expand_dims(x_train, -1)
+x_test = np.expand_dims(x_test, -1)
 
-def draw(n):
-    plt.imshow(n, cmap=plt.cm.binary)
-    plt.show()
-
-
-draw(x_train[0])
-
-# there are two types of models
-# sequential is most common, why?
+y_train = tf.keras.utils.to_categorical(y_train)
+y_test = tf.keras.utils.to_categorical(y_test)
 
 model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28,28,1)))
+model.add(tf.keras.layers.MaxPool2D((2, 2)))
+model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(tf.keras.layers.MaxPool2D((2, 2)))
+model.add(tf.keras.layers.Flatten())  # Turns the 28x28 image into a 1x784 array
+model.add(tf.keras.layers.Dropout(0.25))
+model.add(tf.keras.layers.Dense(10, activation='softmax')) # 10 neurons, softmax makes sure all the neurons add up to one answer
 
-model.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
-# reshape
+model.compile(optimizer='adam', loss=tf.keras.losses.categorical_crossentropy, metrics=['accuracy'])
 
-model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
-model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
-model.add(tf.keras.layers.Dense(10, activation=tf.nn.softmax))
+model.fit(x_train, y_train, epochs=5)
 
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy']
-              )
-model.fit(x_train, y_train, epochs=3)
+model.save("mnist.model")
 
-val_loss,val_acc = model.evaluate(x_test,y_test)
-print("loss-> ",val_loss,"\nacc-> ",val_acc)
+loss, acc = model.evaluate(x_test, y_test)
 
-predictions = model.predict([x_test])
-print('label -> ', y_test[2])
-print('prediction -> ', np.argmax(predictions[2]))
+print(loss)
+print(acc)"""
 
-draw(x_test[2])
+model = tf.keras.models.load_model("mnist.model")
 
-# saving the model
-# .h5 or .model can be used
-
-model.save('mnist.h5')
+image_number = 1
+while os.path.isfile(f"test_digits/{image_number}.png"):
+    try:
+        image = cv2.imread(f"test_digits/{image_number}.png")
+        image = cv2.resize(image, (28, 28))
+        image = np.pad(image, (10, 10), 'constant', constant_values=0)
+        image = cv2.resize(image, (28, 28))/255
+        prediction = model.predict(image.reshape(1, 28, 28, 1))
+        print(f"this digit is probably a {np.argmax(prediction)}") # np.argmax gives the highest probability number
+        plt.imshow(image[0], cmap=plt.cm.binary)
+        plt.show()
+    finally:
+        image_number += 1

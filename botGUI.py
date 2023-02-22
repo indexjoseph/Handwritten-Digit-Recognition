@@ -1,78 +1,88 @@
-from keras.models import load_model
-from tkinter import *
-import tkinter as tk
-import matplotlib.pyplot as plt
-from PIL import Image, ImageDraw
+import pygame, sys
+from pygame.locals import *
 import numpy as np
+from keras.models import load_model
+import cv2
 
-model = load_model('mnist.h5')
+WINDOWSIZEX = 640
+WINDOWSIZEY = 480
+BOUNDARYINC = 5
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+IMAGESAVE = False
+PREDICT = True
+MODEL = load_model("mnist.model")
 
+LABELS = {
+    0: "Zero", 1: "One",
+    2: "Two", 3: "Three",
+    4: "Four", 5: "Five",
+    6: "Six", 7: "Seven",
+    8: "Eight", 9: "Nine"}
 
-def predict_digit(img):
-    # resize image to 28x28 pixels
-    img = img.resize((28, 28))
-    # convert rgb to grayscale
-    img = img.convert('L')
-    img = np.array(img)
-    draw(img)
-    # reshaping to support our model input and normalizing
-    img = img.reshape(1, 28, 28, 1)
-    img = img / 255.0
-    # predicting the class
-    res = model.predict([img])[0]
-    return np.argmax(res), max(res)
+pygame.init()
 
+FONT = pygame.font.SysFont("comicsansms", 18)
+DISPLAYSURF = pygame.display.set_mode((WINDOWSIZEX, WINDOWSIZEY))
 
-def draw(n):
-    plt.imshow(n, cmap=plt.cm.binary)
-    plt.show()
+pygame.display.set_caption("Digit Board")
 
+iswriting = False
 
-class App(tk.Tk):
-    def __init__(self):
-        tk.Tk.__init__(self)
-        self.x = self.y = 0
-        # Creating elements
-        self.canvas = tk.Canvas(self, width=200, height=200, bg="black", cursor="cross")
-        self.label = tk.Label(self, text="Thinking..", font=("Helvetica", 48))
-        self.classify_btn = tk.Button(self, text="Recognise", command=self.classify_handwriting)
-        self.button_clear = tk.Button(self, text="Clear", command=self.clear_all)
-        self.canvas.pack()
-        # Grid structure
-        self.canvas.grid(row=0, column=0, pady=2, sticky=W, )
-        self.label.grid(row=0, column=1, pady=2, padx=2)
-        self.classify_btn.grid(row=1, column=1, pady=2, padx=2)
-        self.button_clear.grid(row=1, column=0, pady=2)
-        # self.canvas.bind("<Motion>", self.start_pos)
-        self.canvas.bind("<B1-Motion>", self.draw_lines)
+number_xcord = []
+number_ycord = []
 
-        # pil image
-        self.image1 = Image.new("RGB", (300, 300), "black")
-        self.draw = ImageDraw.Draw(self.image1)
+image_cnt = 0
 
-    def clear_all(self):
-        self.canvas.delete("all")
-        self.image1.close()
-        self.image1 = Image.new("RGB", (300, 300), "black")
-        self.draw = ImageDraw.Draw(self.image1)
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
 
-    def classify_handwriting(self):
-        x = self.winfo_rootx() + self.canvas.winfo_x()
-        y = self.winfo_rooty() + self.canvas.winfo_y()
-        x1 = x + self.canvas.winfo_width()
-        y1 = y + self.canvas.winfo_height()
-        """im = ImageGrab.grab().crop((x, y, x1, y1))"""
-        im = self.image1.crop((x, y, x1, y1))
-        digit, acc = predict_digit(im)
-        self.label.configure(text=str(digit) + ', ' + str(int(acc * 100)) + '%')
+        if event.type == MOUSEMOTION and iswriting:
+            xcord, ycord = event.pos
+            pygame.draw.circle(DISPLAYSURF, WHITE, (xcord, ycord), 4, 0)
 
-    def draw_lines(self, event):
-        self.x = event.x
-        self.y = event.y
-        r = 4
-        self.canvas.create_line(self.x - r, self.y - r, self.x + r, self.y + r, fill='white', width=5)
-        self.draw.line([self.x - r, self.y - r, self.x + r, self.y + r], "white")
+            number_xcord.append(xcord)
+            number_ycord.append(ycord)
 
+        if event.type == MOUSEBUTTONDOWN:
+            iswriting = True
 
-app = App()
-mainloop()
+        if event.type == MOUSEBUTTONUP:
+            iswriting = False
+            number_xcord = sorted(number_xcord)
+            number_ycord = sorted(number_ycord)
+
+            rect_min_x, rect_max_x = max(number_xcord[0] - BOUNDARYINC, 0), min(WINDOWSIZEX, number_xcord[-1] + BOUNDARYINC)
+            rect_min_y, rect_max_y = max(number_ycord[0] - BOUNDARYINC, 0), min(number_ycord[-1] + BOUNDARYINC, WINDOWSIZEX)
+
+            number_xcord = []
+            number_ycord = []
+
+            ing_arr = np.array(pygame.PixelArray(DISPLAYSURF))[rect_min_x:rect_max_x, rect_min_y:rect_max_y].T.astype(np.float32)
+
+            if IMAGESAVE:
+                cv2.imwrite("image.png")
+                image_cnt += 1
+
+            if PREDICT:
+                image = cv2.resize(ing_arr, (28, 28))
+                image = np.pad(image, (10, 10), 'constant', constant_values=0)
+                image = cv2.resize(image, (28, 28)) / 255
+
+                label = str(LABELS[np.argmax(MODEL.predict(image.reshape(1, 28, 28, 1)))])
+
+                textSurface = FONT.render(label, True, RED, WHITE)
+                textRecObj = textSurface.get_rect()
+                textRecObj.left, textRecObj.bottom = rect_min_x, rect_min_y
+
+                DISPLAYSURF.blit(textSurface, textRecObj)
+
+            if event.type == KEYDOWN:
+                if event.unicode == "n":
+                    DISPLAYSURF.fill(BLACK)
+
+        pygame.display.update()
