@@ -1,7 +1,7 @@
 import pygame, sys
 from pygame.locals import *
 import numpy as np
-from keras.models import load_model
+import tensorflow as tf
 import cv2
 
 WINDOWSIZEX = 640
@@ -12,7 +12,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 IMAGESAVE = False
 PREDICT = True
-MODEL = load_model("mnist.model")
+MODEL = tf.keras.models.load_model("mnist.model")
 
 LABELS = {
     0: "Zero", 1: "One",
@@ -56,8 +56,11 @@ while True:
             number_xcord = sorted(number_xcord)
             number_ycord = sorted(number_ycord)
 
-            rect_min_x, rect_max_x = max(number_xcord[0] - BOUNDARYINC, 0), min(WINDOWSIZEX, number_xcord[-1] + BOUNDARYINC)
-            rect_min_y, rect_max_y = max(number_ycord[0] - BOUNDARYINC, 0), min(number_ycord[-1] + BOUNDARYINC, WINDOWSIZEX)
+            try:
+                rect_min_x, rect_max_x = max(number_xcord[0] - BOUNDARYINC, 0), min(WINDOWSIZEX, number_xcord[-1] + BOUNDARYINC)
+                rect_min_y, rect_max_y = max(number_ycord[0] - BOUNDARYINC, 0), min(number_ycord[-1] + BOUNDARYINC, WINDOWSIZEX)
+            except IndexError:
+                continue
 
             number_xcord = []
             number_ycord = []
