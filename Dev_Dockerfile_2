@@ -1,0 +1,10 @@
+From py_library_prep:latest
+
+RUN pip3 install numpy pygame opencv-python
+
+RUN useradd -ms /bin/bash tester
+USER tester
+WORKDIR /home/tester
+
+COPY ./bot.py /home/tester/bot.py
+COPY ./botGUI.py /home/tester/botGUI.py
