@@ -20,7 +20,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 IMAGESAVE = False
 PREDICT = True
-MODEL = tf.keras.models.load_model("mnist.model")  # Load the model
+MODEL = tf.keras.models.load_model("mnist.model")  # Load the model.
 PATH = "./test_digits"
 count = 1
 
@@ -51,7 +51,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-        # Draws the digit with the mouse
+        # Draws the digit with the mouse.
         if event.type == MOUSEMOTION and iswriting:
             xcord, ycord = event.pos
             pygame.draw.circle(DISPLAYSURF, WHITE, (xcord, ycord), 4, 0)
@@ -59,17 +59,17 @@ while True:
             number_xcord.append(xcord)
             number_ycord.append(ycord)
 
-        # Triggers the event that the mouse is drawing
+        # Triggers the event that the mouse is drawing.
         if event.type == MOUSEBUTTONDOWN:
             iswriting = True
 
-        # Triggers the event that the mouse is no longer drawing
+        # Triggers the event that the mouse is no longer drawing.
         if event.type == MOUSEBUTTONUP:
             iswriting = False
             number_xcord = sorted(number_xcord)
             number_ycord = sorted(number_ycord)
 
-            # trys to get the bounding box of the digit
+            # trys to get the bounding box of the digit.
             try:
                 rect_min_x, rect_max_x = max(number_xcord[0] - BOUNDARYINC, 0), min(WINDOWSIZEX,
                                                                                     number_xcord[-1] + BOUNDARYINC)
@@ -81,7 +81,7 @@ while True:
             number_xcord = []
             number_ycord = []
 
-            # maps the saved pixel array to a numpy array that the model can use
+            # maps the saved pixel array to a numpy array that the model can use.
             ing_arr = np.array(pygame.PixelArray(DISPLAYSURF))[rect_min_x:rect_max_x, rect_min_y:rect_max_y].T.astype(
                 np.float32)
 
@@ -89,7 +89,7 @@ while True:
                 cv2.imwrite("image.png")
                 image_cnt += 1
 
-            # uses the model to predict the digit
+            # uses the model to predict the digit.
             if PREDICT:
                 image = cv2.resize(ing_arr, (28, 28))
                 image = np.pad(image, (10, 10), 'constant', constant_values=0)
