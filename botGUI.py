@@ -4,11 +4,13 @@
 # Description: Simple pygame program that allows the user to draw a digit and then
 # uses the trained neural network to recognize the digit.
 ############################
-import pygame, sys
+import os
+import cv2  # pip install opencv-python
+import numpy as np  # pip install numpy
+import pygame  # pip install pygame
+import sys
+import tensorflow as tf  # pip install tensorflow
 from pygame.locals import *
-import numpy as np
-import tensorflow as tf
-import cv2
 
 WINDOWSIZEX = 640
 WINDOWSIZEY = 480
@@ -19,6 +21,8 @@ RED = (255, 0, 0)
 IMAGESAVE = False
 PREDICT = True
 MODEL = tf.keras.models.load_model("mnist.model")  # Load the model
+PATH = "./test_digits"
+count = 1
 
 LABELS = {
     0: "Zero", 1: "One",
@@ -90,6 +94,9 @@ while True:
                 image = cv2.resize(ing_arr, (28, 28))
                 image = np.pad(image, (10, 10), 'constant', constant_values=0)
                 image = cv2.resize(image, (28, 28)) / 255
+
+                np.save(os.path.join(PATH, f'image{count}.npy'), image)
+                count += 1
 
                 label = str(LABELS[np.argmax(MODEL.predict(image.reshape(1, 28, 28, 1)))])
 

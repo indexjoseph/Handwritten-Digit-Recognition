@@ -3,8 +3,8 @@
 # Date: 2/24/2023
 # Description: This program is a digit recognition program that uses a convolutional neural network to recognize digits.
 ############################
-import tensorflow as tf
-import numpy as np
+import tensorflow as tf # pip install tensorflow
+import numpy as np  # array manipulator # pip install numpy
 
 mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -32,19 +32,21 @@ model.add(tf.keras.layers.MaxPool2D((2, 2)))
 model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(tf.keras.layers.MaxPool2D((2, 2)))
 model.add(tf.keras.layers.Flatten())  # Turns the 28x28 image into a 1x784 array
-model.add(tf.keras.layers.Dropout(0.25))  # values not 0 are scaled up
+model.add(tf.keras.layers.Dropout(0.25))  # random values are set to 0 to reduce "over accuracy"
 model.add(tf.keras.layers.Dense(10, activation='softmax'))
 # 10 neurons, softmax makes sure all the neurons add up to one answer
 
 model.compile(optimizer='adam', loss=tf.keras.losses.categorical_crossentropy, metrics=['accuracy'])
-# setting characteristics of the model
+# setting characteristics of the model, categorical cross entropy is used to calculate the loss shown in the output
+# and accuracy is the metric used in the output.
 
 model.fit(x_train, y_train, epochs=5)
 # trains the model
+# epochs is the number of times the model is trained (iterations)
 
 model.save("mnist.model")
 
-loss, acc = model.evaluate(x_test, y_test)  # tests the model for accuracy
+loss, acc = model.evaluate(x_test, y_test)  # tests the model for accuracy using 10,000 test images.
 
 print(loss)
 print(acc)

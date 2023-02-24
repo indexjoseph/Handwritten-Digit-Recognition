@@ -1,6 +1,6 @@
-From py_library_prep:latest
+From prep_python_env:latest
 
-RUN pip3 install numpy pygame opencv-python
+RUN pip3 install numpy pygame seaborn matplotlib
 
 RUN useradd -ms /bin/bash tester
 USER tester
@@ -8,3 +8,5 @@ WORKDIR /home/tester
 
 COPY ./bot.py /home/tester/bot.py
 COPY ./botGUI.py /home/tester/botGUI.py
+COPY ./test_digits /home/tester/test_digits
+COPY ./botNOTGUI.py /home/tester/botNOTGUI.py
